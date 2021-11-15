@@ -23,6 +23,7 @@ async function run() {
         const housesCollection = database.collection("buyers");
         const bookingCollection = database.collection("bookings");
         const usersCollection = database.collection("users");
+        const reviewCollection = database.collection("reviews");
 
         // GET API 
         app.get('/houses', async (req, res) => {
@@ -31,7 +32,7 @@ async function run() {
             res.send(houses);
         });
 
-        // GET SINGLE SERVICE 
+        // GET SINGLE ITEM 
         app.get('/houses/:id', async (req, res) => {
             const id = req.params.id;
             // console.log('getting specific service', id);
@@ -57,27 +58,43 @@ async function run() {
             res.json(result);
         });
 
-        // Add Booking API 
+        // ADD BOOKING API 
         app.post('/bookings', async (req, res) => {
             const booking = req.body;
             const result = await bookingCollection.insertOne(booking);
             res.json(result);
         })
 
-        // GET Bookings 
+        // GET BOOKINGS 
         app.get('/myApartments/:email', async (req, res) => {
             const result = await bookingCollection.find({ email: req.params.email, }).toArray();
             res.send(result);
         })
 
-        //Delete Booking
+        //DELETE BOOKING
         app.delete('/myApartments/:email', async (req, res) => {
             console.log(req.params.email);
             const result = await bookingCollection.deleteOne({ email: req.params.email });
             res.send(result);
         });
 
-        //verifying admin
+        // POST REVIEW API 
+        app.post('/reviews', async (req, res) => {
+            const review = req.body;
+            console.log('hit the post api', review);
+            const result = await reviewCollection.insertOne(review);
+            console.log(result);
+            res.json(result);
+        });
+
+        // GET REVIEW API 
+        app.get('/reviews', async (req, res) => {
+            const cursor = reviewCollection.find({});
+            const reviews = await cursor.toArray();
+            res.send(reviews);
+        });
+
+        //VERIFYING ADMIN
         app.get('/users/:email', async (req, res) => {
             const email = req.params.email;
             const query = { email: email };
@@ -89,7 +106,7 @@ async function run() {
             res.json({ admin: isAdmin });
         })
 
-        // adding new user 
+        // ADDING NEW USER 
         app.post('/users', async (req, res) =>{
             const user = req.body;
             const result = await usersCollection.insertOne(user);
@@ -106,7 +123,8 @@ async function run() {
             res.json(result);
         });
 
-         app.put('/users/admin', async (req, res) => {
+        // SETTING ADMIN
+        app.put('/users/admin', async (req, res) => {
             const user = req.body;
             const filter = { email: user.email };
             const updateDoc = { $set: { role: 'admin' } };
