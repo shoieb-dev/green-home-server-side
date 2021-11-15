@@ -22,6 +22,7 @@ async function run() {
         const database = client.db("GreenHome");
         const housesCollection = database.collection("buyers");
         const bookingCollection = database.collection("bookings");
+        const usersCollection = database.collection("users");
 
         // GET API 
         app.get('/houses', async (req, res) => {
@@ -74,6 +75,44 @@ async function run() {
             console.log(req.params.email);
             const result = await bookingCollection.deleteOne({ email: req.params.email });
             res.send(result);
+        });
+
+        //verifying admin
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            let isAdmin = false;
+            if (user?.role === 'admin') {
+                isAdmin = true;
+            }
+            res.json({ admin: isAdmin });
+        })
+
+        // adding new user 
+        app.post('/users', async (req, res) =>{
+            const user = req.body;
+            const result = await usersCollection.insertOne(user);
+            console.log(result);
+            res.json(result);
+        })
+
+        app.put('/users', async (req, res) => {
+            const user = req.body;
+            const filter = { email: user.email };
+            const options = { upsert: true };
+            const updateDoc = { $set: user };
+            const result = await usersCollection.updateOne(filter, updateDoc, options);
+            res.json(result);
+        });
+
+         app.put('/users/admin', async (req, res) => {
+            const user = req.body;
+            const filter = { email: user.email };
+            const updateDoc = { $set: { role: 'admin' } };
+            const result = await usersCollection.updateOne(filter, updateDoc);
+            res.json(result);
+
         })
 
     }
