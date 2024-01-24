@@ -47,9 +47,9 @@ async function run() {
         // POST API
         app.post("/houses", async (req, res) => {
             const house = req.body;
-            console.log("hit the post api", house);
+            // console.log("hit the post api", house);
             const result = await housesCollection.insertOne(house);
-            console.log(result);
+            // console.log(result);
             res.json(result);
         });
 
@@ -88,9 +88,9 @@ async function run() {
         // POST REVIEW API
         app.post("/reviews", async (req, res) => {
             const review = req.body;
-            console.log("hit the post api", review);
+            // console.log("hit the post api", review);
             const result = await reviewCollection.insertOne(review);
-            console.log(result);
+            // console.log(result);
             res.json(result);
         });
 
@@ -117,7 +117,7 @@ async function run() {
         app.post("/users", async (req, res) => {
             const user = req.body;
             const result = await usersCollection.insertOne(user);
-            console.log(result);
+            // console.log(result);
             res.json(result);
         });
 
