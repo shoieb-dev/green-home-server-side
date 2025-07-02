@@ -1,157 +1,186 @@
 const express = require("express");
-const { MongoClient } = require("mongodb");
 const cors = require("cors");
 require("dotenv").config();
-const ObjectId = require("mongodb").ObjectId;
+const { ObjectId } = require("mongodb");
+const connectToDatabase = require("./db");
 
 const app = express();
 const port = process.env.PORT || 5000;
 
-// middleware:
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.8su0x.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
-// console.log(uri);
-const client = new MongoClient(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-});
+// === ROUTES ===
 
-async function run() {
-    try {
-        client.connect();
-        console.log("database connected");
-        const database = client.db("GreenHome");
-        const housesCollection = database.collection("buyers");
-        const bookingCollection = database.collection("bookings");
-        const usersCollection = database.collection("users");
-        const reviewCollection = database.collection("reviews");
-
-        // GET API
-        app.get("/houses", async (req, res) => {
-            const cursor = housesCollection.find({});
-            const houses = await cursor.toArray();
-            res.send(houses);
-        });
-
-        // GET SINGLE ITEM
-        app.get("/houses/:id", async (req, res) => {
-            const id = req.params.id;
-            // console.log('getting specific service', id);
-            const query = { _id: ObjectId(id) };
-            const house = await housesCollection.findOne(query);
-            res.json(house);
-        });
-
-        // POST API
-        app.post("/houses", async (req, res) => {
-            const house = req.body;
-            // console.log("hit the post api", house);
-            const result = await housesCollection.insertOne(house);
-            // console.log(result);
-            res.json(result);
-        });
-
-        // DELETE API
-        app.delete("/houses/:id", async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: ObjectId(id) };
-            const result = await housesCollection.deleteOne(query);
-            res.json(result);
-        });
-
-        // ADD BOOKING API
-        app.post("/bookings", async (req, res) => {
-            const booking = req.body;
-            const result = await bookingCollection.insertOne(booking);
-            res.json(result);
-        });
-
-        // GET BOOKINGS
-        app.get("/myApartments/:email", async (req, res) => {
-            const result = await bookingCollection
-                .find({ email: req.params.email })
-                .toArray();
-            res.send(result);
-        });
-
-        //DELETE BOOKING
-        app.delete("/myApartments/:email", async (req, res) => {
-            console.log(req.params.email);
-            const result = await bookingCollection.deleteOne({
-                email: req.params.email,
-            });
-            res.send(result);
-        });
-
-        // POST REVIEW API
-        app.post("/reviews", async (req, res) => {
-            const review = req.body;
-            // console.log("hit the post api", review);
-            const result = await reviewCollection.insertOne(review);
-            // console.log(result);
-            res.json(result);
-        });
-
-        // GET REVIEW API
-        app.get("/reviews", async (req, res) => {
-            const cursor = reviewCollection.find({});
-            const reviews = await cursor.toArray();
-            res.send(reviews);
-        });
-
-        //VERIFYING ADMIN
-        app.get("/users/:email", async (req, res) => {
-            const email = req.params.email;
-            const query = { email: email };
-            const user = await usersCollection.findOne(query);
-            let isAdmin = false;
-            if (user?.role === "admin") {
-                isAdmin = true;
-            }
-            res.json({ admin: isAdmin });
-        });
-
-        // ADDING NEW USER
-        app.post("/users", async (req, res) => {
-            const user = req.body;
-            const result = await usersCollection.insertOne(user);
-            // console.log(result);
-            res.json(result);
-        });
-
-        app.put("/users", async (req, res) => {
-            const user = req.body;
-            const filter = { email: user.email };
-            const options = { upsert: true };
-            const updateDoc = { $set: user };
-            const result = await usersCollection.updateOne(
-                filter,
-                updateDoc,
-                options
-            );
-            res.json(result);
-        });
-
-        // SETTING ADMIN
-        app.put("/users/admin", async (req, res) => {
-            const user = req.body;
-            const filter = { email: user.email };
-            const updateDoc = { $set: { role: "admin" } };
-            const result = await usersCollection.updateOne(filter, updateDoc);
-            res.json(result);
-        });
-    } finally {
-        // await client.close()
-    }
-}
-run().catch(console.dir);
-
+// Home Route
 app.get("/", (req, res) => {
-    res.send("Hello World!");
+  res.send("Hello Green Home Backend!");
 });
 
+// GET All Houses
+app.get("/houses", async (req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const houses = await db.collection("buyers").find({}).toArray();
+    res.send(houses);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Failed to fetch houses");
+  }
+});
+
+// GET Single House by ID
+app.get("/houses/:id", async (req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const house = await db.collection("buyers").findOne({ _id: ObjectId(req.params.id) });
+    res.json(house);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Failed to fetch house");
+  }
+});
+
+// POST New House
+app.post("/houses", async (req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const result = await db.collection("buyers").insertOne(req.body);
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Failed to add house");
+  }
+});
+
+// DELETE House
+app.delete("/houses/:id", async (req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const result = await db.collection("buyers").deleteOne({ _id: ObjectId(req.params.id) });
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Failed to delete house");
+  }
+});
+
+// POST New Booking
+app.post("/bookings", async (req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const result = await db.collection("bookings").insertOne(req.body);
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Failed to add booking");
+  }
+});
+
+// GET Bookings by Email
+app.get("/myApartments/:email", async (req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const result = await db.collection("bookings").find({ email: req.params.email }).toArray();
+    res.send(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Failed to fetch bookings");
+  }
+});
+
+// DELETE Booking by Email
+app.delete("/myApartments/:email", async (req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const result = await db.collection("bookings").deleteOne({ email: req.params.email });
+    res.send(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Failed to delete booking");
+  }
+});
+
+// POST New Review
+app.post("/reviews", async (req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const result = await db.collection("reviews").insertOne(req.body);
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Failed to add review");
+  }
+});
+
+// GET All Reviews
+app.get("/reviews", async (req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const reviews = await db.collection("reviews").find({}).toArray();
+    res.send(reviews);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Failed to fetch reviews");
+  }
+});
+
+// Check if User is Admin
+app.get("/users/:email", async (req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const user = await db.collection("users").findOne({ email: req.params.email });
+    const isAdmin = user?.role === "admin";
+    res.json({ admin: isAdmin });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Failed to check admin status");
+  }
+});
+
+// Add New User
+app.post("/users", async (req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const result = await db.collection("users").insertOne(req.body);
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Failed to add user");
+  }
+});
+
+// Upsert User
+app.put("/users", async (req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const filter = { email: req.body.email };
+    const options = { upsert: true };
+    const updateDoc = { $set: req.body };
+    const result = await db.collection("users").updateOne(filter, updateDoc, options);
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Failed to update user");
+  }
+});
+
+// Set Admin Role
+app.put("/users/admin", async (req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const filter = { email: req.body.email };
+    const updateDoc = { $set: { role: "admin" } };
+    const result = await db.collection("users").updateOne(filter, updateDoc);
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Failed to set admin role");
+  }
+});
+
+// Start Server
 app.listen(port, () => {
-    console.log(`Example app listening at http://localhost:${port}`);
+  console.log(`Green Home server running at http://localhost:${port}`);
 });
