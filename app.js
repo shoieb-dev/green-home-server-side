@@ -28,6 +28,10 @@ connectToDatabase()
     app.use("/api/users", userRoutes);
     app.use("/api/reviews", reviewRoutes);
 
+    app.get("/", (req, res) => {
+      res.send("Green Home Server is running.");
+    });
+
     // 404 Route Handler
     app.use((req, res, next) => {
       res.status(404).json({ success: false, message: "Route not found" });
