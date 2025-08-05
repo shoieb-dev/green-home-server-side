@@ -24,7 +24,7 @@ async function connectToDatabase() {
   db = client.db("GreenHome");
 
   collections = {
-    buyers: db.collection("buyers"),
+    houses: db.collection("buyers"),
     bookings: db.collection("bookings"),
     reviews: db.collection("reviews"),
     users: db.collection("users"),
