@@ -12,7 +12,6 @@ const userRoutes = require("./routes/userRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 
 const app = express();
-const port = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
@@ -21,7 +20,7 @@ app.use(express.json());
 // DB connection setup
 connectToDatabase()
   .then(() => {
-    console.log("🚀 Server is ready");
+    console.log("🚀 Connected to database");
 
     // Routes
     app.use("/api/houses", houseRoutes);
@@ -29,22 +28,16 @@ connectToDatabase()
     app.use("/api/users", userRoutes);
     app.use("/api/reviews", reviewRoutes);
 
-    // 404 Route Handler (Optional)
+    // 404 Route Handler
     app.use((req, res, next) => {
       res.status(404).json({ success: false, message: "Route not found" });
     });
 
     // Error Handler
     app.use(errorHandler);
-
-    // Start server
-    app.listen(port, () => {
-      console.log(`✅ Server is running on port ${port}`);
-    });
   })
   .catch((err) => {
     console.error("❌ Failed to connect to database", err);
-    process.exit(1); // Exit app if DB connection fails
   });
 
 module.exports = app;
