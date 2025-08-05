@@ -9,7 +9,7 @@ exports.getAllHouses = async (req, res, next) => {
     res.send(houses);
   } catch (error) {
     console.error("Error in getAllHouses:", error);
-    return next(new Error("Failed to fetch houses"));
+    return next(error);
   }
 };
 
