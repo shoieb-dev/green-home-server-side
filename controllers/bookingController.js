@@ -31,7 +31,7 @@ exports.createBooking = async (req, res, next) => {
     const bookingData = {
       ...req.body,
       bookedAt: new Date(), // Adds the current timestamp
-      status: "Pending",
+      status: "pending",
     };
 
     const result = await bookings.insertOne(bookingData);
