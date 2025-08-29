@@ -60,19 +60,43 @@ exports.upsertUser = async (req, res, next) => {
 exports.setAdminRole = async (req, res, next) => {
   try {
     const usersCollection = await getUserCollection();
-    const email = req.body.email?.toLowerCase();
+    const requesterEmail = req.user?.email?.toLowerCase(); // from Firebase token
+    const targetEmail = req.body.email?.toLowerCase();
 
-    if (!email) {
+    if (!targetEmail) {
       return res.status(400).json({ success: false, message: "Email is required" });
     }
 
-    const filter = { email };
-    const updateDoc = { $set: { role: "admin" } };
+    // Check if requester is an admin
+    const requesterAccount = await usersCollection.findOne({ email: requesterEmail });
 
-    const result = await usersCollection.updateOne(filter, updateDoc);
-    res.json({ success: true, data: result });
+    if (!requesterAccount || requesterAccount.role !== "admin") {
+      return res.status(403).json({ success: false, message: "Forbidden: Only admins can assign roles" });
+    }
+
+    // Find the target user
+    const targetAccount = await usersCollection.findOne({ email: targetEmail });
+
+    if (!targetAccount) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (targetAccount.role === "admin") {
+      return res.status(200).json({
+        success: true,
+        message: `${targetEmail} is already an admin`,
+      });
+    }
+
+    // Promote the target user
+    await usersCollection.updateOne({ email: targetEmail }, { $set: { role: "admin" } });
+
+    res.status(200).json({
+      success: true,
+      message: `${targetEmail} has been promoted to admin`,
+    });
   } catch (error) {
     console.error("Error in setAdminRole:", error);
-    return next(new Error("Failed to set admin role"));
+    return res.status(500).json({ success: false, message: "Failed to set admin role" });
   }
 };
