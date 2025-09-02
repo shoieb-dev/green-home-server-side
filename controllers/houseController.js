@@ -44,6 +44,20 @@ exports.createHouse = async (req, res, next) => {
   }
 };
 
+exports.updateHouse = async (req, res, next) => {
+  try {
+    if (!ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, message: "Invalid house ID" });
+    }
+    const buyers = await getHouseCollection();
+    const result = await buyers.updateOne({ _id: new ObjectId(req.params.id) }, { $set: req.body });
+    res.json(result);
+  } catch (error) {
+    console.error("Error in updateHouse:", error);
+    return next(new Error("Failed to update house"));
+  }
+};
+
 exports.deleteHouse = async (req, res, next) => {
   try {
     if (!ObjectId.isValid(req.params.id)) {
