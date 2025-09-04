@@ -63,9 +63,15 @@ exports.deleteHouse = async (req, res, next) => {
     if (!ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ success: false, message: "Invalid house ID" });
     }
-    const buyers = await getHouseCollection();
-    const result = await buyers.deleteOne({ _id: ObjectId(req.params.id) });
-    res.json(result);
+
+    const houseCollection = await getHouseCollection();
+    const result = await houseCollection.deleteOne({ _id: new ObjectId(req.params.id) });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ success: false, message: "House not found" });
+    }
+
+    res.json({ success: true, message: "House deleted successfully" });
   } catch (error) {
     console.error("Error in deleteHouse:", error);
     return next(new Error("Failed to delete house"));
