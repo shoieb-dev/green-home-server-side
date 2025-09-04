@@ -28,6 +28,7 @@ async function connectToDatabase() {
     bookings: db.collection("bookings"),
     reviews: db.collection("reviews"),
     users: db.collection("users"),
+    images: db.collection("images"),
   };
 
   return { db, collections };
