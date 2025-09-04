@@ -7,6 +7,7 @@ const houseRoutes = require("./routes/houseRoutes");
 const userRoutes = require("./routes/userRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
+const uploadRoute = require("./routes/uploadRoute");
 
 const errorHandler = require("./middlewares/errorHandler");
 
@@ -23,6 +24,7 @@ app.use("/api/houses", houseRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/images", uploadRoute);
 
 // ✅ Root route
 app.get("/", (req, res) => {
