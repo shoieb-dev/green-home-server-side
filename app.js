@@ -8,6 +8,7 @@ const userRoutes = require("./routes/userRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const uploadRoute = require("./routes/uploadRoute");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 
 const errorHandler = require("./middlewares/errorHandler");
 
@@ -25,6 +26,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/images", uploadRoute);
+app.use("/api/dashboard", dashboardRoutes);
 
 // ✅ Root route
 app.get("/", (req, res) => {
