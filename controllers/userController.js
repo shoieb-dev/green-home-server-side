@@ -13,6 +13,28 @@ exports.checkIfAdmin = async (req, res, next) => {
   }
 };
 
+exports.getUserByEmail = async (req, res, next) => {
+  try {
+    const usersCollection = await getUserCollection();
+    const email = req.params.email?.toLowerCase();
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required" });
+    }
+
+    const user = await usersCollection.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.json({ success: true, data: user });
+  } catch (error) {
+    console.error("Error in getUserByEmail:", error);
+    return next(new Error("Failed to fetch user"));
+  }
+};
+
 exports.addUser = async (req, res, next) => {
   try {
     const users = await getUserCollection();
@@ -38,22 +60,70 @@ exports.addUser = async (req, res, next) => {
 
 exports.upsertUser = async (req, res, next) => {
   try {
-    const usersCollection = await getUserCollection();
+    const users = await getUserCollection();
     const email = req.body.email?.toLowerCase();
 
-    if (!email) {
-      return res.status(400).json({ success: false, message: "Email is required" });
+    if (!email) return res.status(400).json({ success: false, message: "Email is required" });
+
+    const existing = await users.findOne({ email });
+
+    if (!existing) {
+      // First-time Google login → insert both Google + custom defaults
+      const newUser = {
+        email,
+        googleName: req.body.displayName,
+        googlePhotoUrl: req.body.photoURL,
+        displayName: req.body.displayName, // default to Google name
+        photoURL: req.body.photoURL, // default to Google photo
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      await users.insertOne(newUser);
+      return res.json({ success: true, data: newUser });
     }
 
-    const filter = { email };
-    const options = { upsert: true };
-    const updateDoc = { $set: req.body };
+    // Existing user → only update Google fields, do NOT overwrite custom edits
+    const updateDoc = {
+      $set: {
+        googleName: req.body.displayName,
+        googlePhotoUrl: req.body.photoURL,
+        updatedAt: new Date(),
+      },
+    };
 
-    const result = await usersCollection.updateOne(filter, updateDoc, options);
-    res.json({ success: true, data: result });
-  } catch (error) {
-    console.error("Error in upsertUser:", error);
+    await users.updateOne({ email }, updateDoc);
+    res.json({ success: true, message: "User Google data updated" });
+  } catch (err) {
+    console.error("Error in upsertUser:", err);
     return next(new Error("Failed to update user"));
+  }
+};
+
+exports.updateProfile = async (req, res, next) => {
+  try {
+    const users = await getUserCollection();
+    const { email, displayName, photoURL } = req.body;
+
+    if (!email) return res.status(400).json({ success: false, message: "Email is required" });
+
+    const updateDoc = {
+      $set: {
+        displayName,
+        photoURL,
+        updatedAt: new Date(),
+      },
+    };
+
+    const result = await users.updateOne({ email: email.toLowerCase() }, updateDoc);
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.json({ success: true, message: "Profile updated" });
+  } catch (err) {
+    console.error("Error in updateProfile:", err);
+    return next(new Error("Failed to update profile"));
   }
 };
 
