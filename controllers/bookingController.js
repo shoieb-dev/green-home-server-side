@@ -1,6 +1,7 @@
 // controllers/bookingController.js
 const { getBookingCollection } = require("../models/bookingModel");
 const { ObjectId } = require("mongodb");
+const { getUserCollection } = require("../models/userModel");
 
 exports.getAllBookings = async (req, res, next) => {
   try {
@@ -27,9 +28,16 @@ exports.getBookingsByEmail = async (req, res, next) => {
 exports.createBooking = async (req, res, next) => {
   try {
     const bookings = await getBookingCollection();
+    const users = await getUserCollection();
+
+    const user = await users.findOne({ email: req.body.email });
+    if (!user) {
+      return res.status(400).json({ success: false, message: "User not found with the provided email" });
+    }
 
     const bookingData = {
       ...req.body,
+      userId: user._id,
       bookedAt: new Date(), // Adds the current timestamp
       status: "pending",
     };
