@@ -30,20 +30,35 @@ exports.createBooking = async (req, res, next) => {
     const bookings = await getBookingCollection();
     const users = await getUserCollection();
 
+    // Find user by email
     const user = await users.findOne({ email: req.body.email });
     if (!user) {
       return res.status(400).json({ success: false, message: "User not found with the provided email" });
     }
 
+    // Step 1: Check if booking already exists for this user + house
+    const existingBooking = await bookings.findOne({
+      userId: user._id,
+      houseId: req.body.houseId,
+    });
+
+    if (existingBooking) {
+      return res.status(400).json({
+        success: false,
+        message: "You have already booked this house",
+      });
+    }
+
+    // Step 2: Insert new booking
     const bookingData = {
       ...req.body,
       userId: user._id,
-      bookedAt: new Date(), // Adds the current timestamp
+      bookedAt: new Date(),
       status: "pending",
     };
 
     const result = await bookings.insertOne(bookingData);
-    res.json(result);
+    res.json({ success: true, bookingId: result.insertedId });
   } catch (error) {
     console.error("Error in createBooking:", error);
     return next(new Error("Failed to add booking"));
