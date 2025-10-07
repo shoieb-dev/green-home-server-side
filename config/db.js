@@ -13,8 +13,6 @@ async function connectToDatabase() {
 
   if (!client) {
     client = new MongoClient(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       serverApi: ServerApiVersion.v1,
     });
     await client.connect();
