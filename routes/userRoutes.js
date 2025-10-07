@@ -7,9 +7,11 @@ const {
   setAdminRole,
   getUserByEmail,
   updateProfile,
+  getAllUsers,
 } = require("../controllers/userController");
 const verifyToken = require("../middlewares/verifyToken");
 
+router.get("/", getAllUsers);
 router.get("/:email", getUserByEmail);
 router.get("/check/:email", checkIfAdmin);
 router.post("/", addUser);

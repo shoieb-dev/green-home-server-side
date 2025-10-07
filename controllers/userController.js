@@ -13,6 +13,17 @@ exports.checkIfAdmin = async (req, res, next) => {
   }
 };
 
+exports.getAllUsers = async (req, res, next) => {
+  try {
+    const users = await getUserCollection();
+    const result = await users.find({}).toArray();
+    res.json(result);
+  } catch (error) {
+    console.error("Error in getAllUsers:", error);
+    return next(new Error("Failed to fetch users"));
+  }
+};
+
 exports.getUserByEmail = async (req, res, next) => {
   try {
     const usersCollection = await getUserCollection();
