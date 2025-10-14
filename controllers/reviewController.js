@@ -1,4 +1,5 @@
 // controllers/reviewController.js
+const { ObjectId } = require("mongodb");
 const { getReviewCollection } = require("../models/reviewModel");
 const { getUserCollection } = require("../models/userModel");
 
@@ -34,5 +35,35 @@ exports.getAllReviews = async (req, res, next) => {
   } catch (error) {
     console.error("Error in getAllReviews:", error);
     return next(new Error("Failed to fetch reviews"));
+  }
+};
+
+exports.getReviewById = async (req, res, next) => {
+  try {
+    const reviews = await getReviewCollection();
+    const reviewId = req.params.id;
+    const review = await reviews.findOne({ _id: new ObjectId(reviewId) });
+    if (!review) {
+      return res.status(404).json({ success: false, message: "Review not found" });
+    }
+    res.json(review);
+  } catch (error) {
+    console.error("Error in getReviewById:", error);
+    return next(new Error("Failed to fetch review"));
+  }
+};
+
+exports.deleteReview = async (req, res, next) => {
+  try {
+    const reviews = await getReviewCollection();
+    const reviewId = req.params.id;
+    const result = await reviews.deleteOne({ _id: new ObjectId(reviewId) });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ success: false, message: "Review not found" });
+    }
+    res.json({ success: true, message: "Review deleted successfully" });
+  } catch (error) {
+    console.error("Error in deleteReview:", error);
+    return next(new Error("Failed to delete review"));
   }
 };
