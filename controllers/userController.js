@@ -181,3 +181,74 @@ exports.setAdminRole = async (req, res, next) => {
     return res.status(500).json({ success: false, message: "Failed to set admin role" });
   }
 };
+
+exports.removeAdminRole = async (req, res, next) => {
+  try {
+    const usersCollection = await getUserCollection();
+    const requesterEmail = req.user?.email?.toLowerCase(); // from Firebase token
+    const targetEmail = req.body.email?.toLowerCase();
+
+    if (!targetEmail) {
+      return res.status(400).json({ success: false, message: "Email is required" });
+    }
+
+    // Check if requester is an admin
+    const requesterAccount = await usersCollection.findOne({ email: requesterEmail });
+
+    if (!requesterAccount || requesterAccount.role !== "admin") {
+      return res.status(403).json({ success: false, message: "Forbidden: Only admins can assign roles" });
+    }
+
+    // Find the target user
+    const targetAccount = await usersCollection.findOne({ email: targetEmail });
+
+    if (!targetAccount) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (targetAccount.role !== "admin") {
+      return res.status(400).json({
+        success: false,
+        message: `${targetEmail} is not an admin`,
+      });
+    }
+
+    // **CRITICAL CHECK: Count total admins before removal**
+    const adminCount = await usersCollection.countDocuments({ role: "admin" });
+
+    if (adminCount <= 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot remove the last admin. At least one admin must remain in the system.",
+      });
+    }
+
+    // Prevent admin from removing themselves (optional but recommended)
+    if (requesterEmail === targetEmail) {
+      return res.status(400).json({
+        success: false,
+        message: "You cannot remove your own admin privileges. Ask another admin to do this.",
+      });
+    }
+
+    // Demote the target user to regular user
+    await usersCollection.updateOne(
+      { email: targetEmail },
+      {
+        $unset: { role: "" },
+        $currentDate: { updatedAt: true },
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `Admin privileges removed from ${targetEmail} successfully`,
+    });
+  } catch (error) {
+    console.error("Error in removeAdminRole:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to remove admin role. Please try again.",
+    });
+  }
+};

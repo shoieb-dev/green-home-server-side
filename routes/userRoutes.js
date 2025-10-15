@@ -8,6 +8,7 @@ const {
   getUserByEmail,
   updateProfile,
   getAllUsers,
+  removeAdminRole,
 } = require("../controllers/userController");
 const verifyToken = require("../middlewares/verifyToken");
 
@@ -18,5 +19,6 @@ router.post("/", addUser);
 router.put("/", upsertUser); // gogle login
 router.put("/profile", updateProfile); // custom profile update
 router.put("/make-admin", verifyToken, setAdminRole);
+router.put("/remove-admin", verifyToken, removeAdminRole);
 
 module.exports = router;
