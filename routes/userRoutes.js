@@ -10,7 +10,7 @@ const {
   getAllUsers,
   removeAdminRole,
 } = require("../controllers/userController");
-const verifyToken = require("../middlewares/verifyToken");
+const { verifyToken } = require("../middlewares/verifyToken");
 
 router.get("/", getAllUsers);
 router.get("/:email", getUserByEmail);
