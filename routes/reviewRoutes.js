@@ -1,10 +1,23 @@
 const express = require("express");
 const router = express.Router();
-const { addReview, getAllReviews, getReviewById, deleteReview } = require("../controllers/reviewController");
+const {
+  addReview,
+  getAllReviews,
+  getReviewByReviewId,
+  deleteReview,
+  getReviewsByUserId,
+  updateReview,
+} = require("../controllers/reviewController");
+const { verifyToken } = require("../middlewares/verifyToken");
 
-router.post("/", addReview);
+// Public routes (no auth needed)
 router.get("/", getAllReviews);
-router.get("/:id", getReviewById);
-router.delete("/:id", deleteReview);
+
+// Protected routes (auth required)
+router.post("/", verifyToken, addReview);
+router.put("/:id", verifyToken, updateReview);
+router.delete("/:id", verifyToken, deleteReview);
+router.get("/:id", verifyToken, getReviewByReviewId);
+router.get("/user/:userId", verifyToken, getReviewsByUserId);
 
 module.exports = router;
