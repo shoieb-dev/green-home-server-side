@@ -14,15 +14,15 @@ This API handles secure authentication, property lifecycle management, booking o
 
 ## 📖 Table of Contents
 
-- [Features](#-features)  
-- [Tech Stack](#-tech-stack)  
-- [Architecture](#-architecture)  
-- [API Endpoints](#-api-endpoints)  
-- [Security & Optimization](#-security--optimization)  
+- [Features](#features)  
+- [Tech Stack](#tech-stack)  
+- [Architecture](#architecture)  
+- [API Endpoints](#api-endpoints)  
+- [Security & Optimization](#security)
 
 ---
 
-## 📌 Features
+## 📌 Features <a id="features"></a>
 
 ### 🔐 Authentication & Authorization
 - JWT-based authentication system  
@@ -39,7 +39,7 @@ This API handles secure authentication, property lifecycle management, booking o
 
 ---
 
-## ⚙️ Tech Stack
+## ⚙️ Tech Stack <a id="tech-stack"></a>
 
 | Category      | Tools                          |
 |--------------|-------------------------------|
@@ -51,13 +51,13 @@ This API handles secure authentication, property lifecycle management, booking o
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture <a id="architecture"></a>
 
 The project follows a **Modular MVC (Model-View-Controller)** pattern for scalability and maintainability.
 
 ---
 
-## 🔑 API Endpoints
+## 🔑 API Endpoints <a id="api-endpoints"></a>
 
 ### 🛡️ Authentication
 | Method | Endpoint            | Description                     |
@@ -91,7 +91,7 @@ The project follows a **Modular MVC (Model-View-Controller)** pattern for scalab
 
 ---
 
-## 🔐 Security & Optimization
+## 🔐 Security & Optimization <a id="security"></a>
 
 To ensure the safety and performance of the system:
 
